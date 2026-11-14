@@ -40,6 +40,7 @@ This repository builds **OnePlus (Oppo/Realme) device kernels** with GitHub Acti
 | 🔀 Build Channel | Release: latest **stable** upstream Release (tag commit + same-version manager), falls back to the newest official default-branch build when the upstream only ships pre-releases; Latest: SukiSU/BakaSU pin the default-branch HEAD and pick the newest manager build matching that version, while FinaSU uses the newest `build-manager.yml` build and pins that build's commit |
 | 🙈 SUSFS | Kernel-level hiding working with KSU to complete environment spoofing |
 | 🔔 Re-Kernel | Optional Re-Kernel driver integration |
+| 🧩 NoMount | Optional NoMount VFS path-redirection metamodule; the matching companion module must be flashed separately |
 | 🛡️ BBG (Baseband Guard) | LSM-based protection for critical device partitions; abl/efisp whitelist for exploit devices |
 | 🛠️ HMBIRD SCX | Scheduler extensions for SM8750/MT6991 devices |
 | 🌐 Network Enhancement | BBRv1 / BBRv3 congestion control, CAKE & PIE qdisc, IPSet + IPv6 NAT |
@@ -96,6 +97,7 @@ A commit is a hash string representing the state of a repository at a certain po
 - [AnyKernel3](https://github.com/osm0sis/AnyKernel3)
 - [Baseband Guard](https://github.com/vc-teahouse/Baseband-guard)
 - [Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)
+- [NoMount](https://github.com/maxsteeel/nomount)
 - [Droidspaces](https://github.com/ravindu644/Droidspaces-OSS)
 - [ZyCromerZ/Clang](https://github.com/ZyCromerZ/Clang) (build compiler)
 - [OnePlusOSS](https://github.com/OnePlusOSS) (kernel sources) & [CodeLinaro](https://git.codelinaro.org/) (prebuilt toolchains)
@@ -160,6 +162,7 @@ A commit is a hash string representing the state of a repository at a certain po
 | 🔀 构建通道 | 正式：上游最新**正式版** Release（标签提交 + 同版本管理器），上游只有预发布版时改用官方默认分支最新上传构建；最新：SukiSU/BakaSU 锁定默认分支 HEAD 并取与 HEAD 版本一致的最新构建，FinaSU 取最新 `build-manager.yml` 成功构建并锁定该构建提交 |
 | 🙈 SUSFS | 内核级隐藏，配合 KSU 完成环境伪装 |
 | 🔔 Re-Kernel | 可选集成 Re-Kernel 驱动 |
+| 🧩 NoMount | 可选 NoMount VFS 路径重定向挂载元模块；需单独刷入配套模块 |
 | 🛡️ BBG 基带保护 | 基于 LSM 保护关键设备分区；efisp 漏洞设备可加入 abl/efisp 白名单 |
 | 🛠️ HMBIRD SCX | 适用于 SM8750/MT6991 设备的调度扩展 |
 | 🌐 网络增强 | BBRv1 / BBRv3 拥塞控制、CAKE 与 PIE qdisc、IPSet + IPv6 NAT |
@@ -216,6 +219,7 @@ A commit is a hash string representing the state of a repository at a certain po
 - [AnyKernel3](https://github.com/osm0sis/AnyKernel3)
 - [Baseband Guard](https://github.com/vc-teahouse/Baseband-guard)
 - [Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)
+- [NoMount](https://github.com/maxsteeel/nomount)
 - [Droidspaces](https://github.com/ravindu644/Droidspaces-OSS)
 - [ZyCromerZ/Clang](https://github.com/ZyCromerZ/Clang)（构建编译器）
 - [OnePlusOSS](https://github.com/OnePlusOSS)（内核源码）& [CodeLinaro](https://git.codelinaro.org/)（预构建工具链）

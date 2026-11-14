@@ -24,6 +24,11 @@ inputs:
     required: false
     type: boolean
     default: false
+  use_nomount:
+    description: 'Integrate the NoMount VFS path-redirection metamodule in-tree (CONFIG_NOMOUNT; companion module is shipped separately)'
+    required: false
+    type: boolean
+    default: false
   ksu_commit:
     description: 'Align the kernel-side KSU version source with the latest officially uploaded manager build: BakaSU checks KernelSU out at this commit, SukiSU rewrites its builtin Makefile REPO_BRANCH to it (empty = follow the passed branch/HEAD)'
     required: false
@@ -2360,6 +2365,50 @@ runs:
         rollback_rekernel
         echo "::error::Re-Kernel integration failed"
         exit 1
+
+    - name: Add NoMount
+      if: ${{ inputs.use_nomount }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "::group::Add NoMount"
+        cd "$COMMON_KERNEL_FOLDER"
+        DEFCONFIG="$COMMON_KERNEL_FOLDER/arch/arm64/configs/gki_defconfig"
+        NOMOUNT_SETUP_URL="https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh"
+
+        nomount_cleanup() {
+          curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors "$NOMOUNT_SETUP_URL" \
+            | bash -s -- --cleanup >/dev/null 2>&1 || true
+        }
+
+        nomount_fail() {
+          nomount_cleanup
+          echo "::error::$1"
+          exit 1
+        }
+
+        echo "Integrating NoMount from the upstream dev branch..."
+        if ! curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "$NOMOUNT_SETUP_URL" \
+          | bash -s -- dev; then
+          nomount_fail "NoMount integration script failed"
+        fi
+
+        # The setup script vendors fs/nomount and registers it in fs/Kconfig;
+        # both must be present before CONFIG_NOMOUNT can take effect.
+        [ -L "fs/nomount" ] || nomount_fail "fs/nomount symlink missing after NoMount setup"
+        grep -q 'source "fs/nomount/Kconfig"' fs/Kconfig \
+          || nomount_fail "fs/Kconfig not registered for NoMount"
+
+        # Enable in defconfig (idempotent)
+        if ! grep -q '^CONFIG_NOMOUNT=y' "$DEFCONFIG"; then
+          echo "CONFIG_NOMOUNT=y" >> "$DEFCONFIG"
+        else
+          echo "CONFIG_NOMOUNT=y already present, skipping"
+        fi
+
+        echo "NoMount source commit: $(git -C NoMount rev-parse --short HEAD 2>/dev/null || echo unknown)"
+        echo "✅ NoMount integrated (CONFIG_NOMOUNT=y)"
+        echo "::endgroup::"
 
     - name: Add Build based configs
       shell: bash

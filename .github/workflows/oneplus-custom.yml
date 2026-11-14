@@ -210,6 +210,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_nomount:
+        description: '启用 NoMount 挂载元模块（需单独刷入配套模块）'
+        required: false
+        type: boolean
+        default: false
       enable_droidspaces_ntsync:
         description: '启用 Droidspaces 容器 & NTSync'
         required: false
@@ -435,6 +440,7 @@ jobs:
               echo "| FinaSU Hook | \`SUSFS Inline\` |"
             fi
             echo "| Re-Kernel | ${{ inputs.use_rekernel && '✅ enabled' || '❌ disabled' }} |"
+            echo "| NoMount | ${{ inputs.use_nomount && '✅ enabled' || '❌ disabled' }} |"
             echo "| Optimization | \`${{ inputs.optimize_level }}\` |"
             echo "| MLGO | ${{ inputs.mlgo && '✅ enabled' || '❌ disabled' }} |"
             echo "| Droidspaces & NTSync | ${{ inputs.enable_droidspaces_ntsync && '✅ enabled' || '❌ disabled' }} |"
@@ -647,6 +653,7 @@ jobs:
           ksu_type: ${{ fromJSON(needs.set-matrix.outputs.matrix)[0].ksu_type }}
           ksu_branch_or_hash: ${{ fromJSON(needs.set-matrix.outputs.matrix)[0].ksu_resolved_hash }}
           use_rekernel: ${{ inputs.use_rekernel }}
+          use_nomount: ${{ inputs.use_nomount || false }}
           # BakaSU/FinaSU：内核侧检出到官方最新上传 Manager 构建的同一提交（空=跟随 ksu_branch_or_hash）
           ksu_commit: ${{ needs.get-manager.outputs.ksuCommit }}
           # FinaSU：管理器签名证书（内核第二信任槽对齐用，空=构建时回退 Release APK 提取）
@@ -700,3 +707,4 @@ jobs:
     with:
       ksu_variant: ${{ inputs.ksu_variant }}
       build_channel: ${{ inputs.build_channel }}
+      use_nomount: ${{ inputs.use_nomount || false }}

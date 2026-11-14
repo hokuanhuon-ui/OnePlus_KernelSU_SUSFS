@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: "正式 (Release)"
+      use_nomount:
+        description: "下载 NoMount 挂载元模块（需配合内核侧 CONFIG_NOMOUNT 构建，用户需自行刷入）"
+        required: false
+        type: boolean
+        default: false
     outputs:
       ksuVer:
         description: "The calculated KSU version number"
@@ -273,6 +278,54 @@ jobs:
           mv "$NAME" "susfs-module/$NAME"
           ls -la susfs-module/
 
+      - name: 添加 NoMount 模块
+        id: add_nomount
+        if: inputs.use_nomount
+        continue-on-error: true
+        run: |
+          # NoMount 元模块通过 maxsteeel/nomount 的 GitHub Releases 发布，拉取最新 Release 资产
+          RELEASE_API="https://api.github.com/repos/maxsteeel/nomount/releases/latest"
+          RELEASE_JSON=""
+          for ATTEMPT in 1 2 3; do
+            RELEASE_JSON=$(curl -s --fail --max-time 30 \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$RELEASE_API") \
+              && [ -n "$RELEASE_JSON" ] && break
+            echo "获取 NoMount Release 信息失败，重试 ($ATTEMPT/3)..."
+            sleep 5
+          done
+          if [ -z "$RELEASE_JSON" ]; then
+            echo "无法获取 nomount 最新 Release 信息"
+            exit 1
+          fi
+
+          TAG_NAME=$(printf '%s' "$RELEASE_JSON" | jq -r '.tag_name')
+          ASSET_URL=$(printf '%s' "$RELEASE_JSON" | jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url' | head -n 1)
+          ASSET_NAME=$(basename "$ASSET_URL")
+
+          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+            echo "Release $TAG_NAME 中未找到 NoMount 模块 zip"
+            exit 1
+          fi
+
+          echo "下载 NoMount 模块: $ASSET_NAME (Release $TAG_NAME)"
+          if ! curl -sL --fail --retry 3 --max-time 180 -o "$ASSET_NAME" "$ASSET_URL"; then
+            echo "下载 NoMount 模块失败: $ASSET_URL"
+            exit 1
+          fi
+          echo "NOMOUNT_NAME=$TAG_NAME" >> "$GITHUB_ENV"
+
+          # 校验完整性后解压为模块目录，发布时重新打包为可直接刷入的 zip
+          if ! unzip -t "$ASSET_NAME" >/dev/null 2>&1; then
+            echo "下载的 NoMount 模块 zip 损坏"
+            exit 1
+          fi
+          rm -rf nomount-module
+          mkdir -p nomount-module
+          unzip -oq "$ASSET_NAME" -d nomount-module
+          rm -f "$ASSET_NAME"
+          [ -f nomount-module/module.prop ] || { echo "NoMount 模块缺少 module.prop"; exit 1; }
+          ls -la nomount-module/
+
       - name: Notify on failure
         if: steps.add_KSU.outcome == 'failure'
         run: echo "下载CI构建的KSU失败!"
@@ -309,3 +362,10 @@ jobs:
         with:
           name: susfs-${{ env.SUSFS_NAME }}
           path: ./susfs-module/*
+
+      - name: 上传NoMount模块
+        if: inputs.use_nomount && steps.add_nomount.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: nomount-${{ env.NOMOUNT_NAME }}
+          path: ./nomount-module/*
