@@ -52,6 +52,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_nomount:
+        description: '启用 NoMount 挂载元模块（需单独刷入配套模块）'
+        required: false
+        type: boolean
+        default: false
       enable_droidspaces_ntsync:
         description: '启用 Droidspaces 容器 & NTSync'
         required: false
@@ -780,6 +785,7 @@ jobs:
           ksu_type: ${{ matrix.ksu_type }}
           ksu_branch_or_hash: ${{ matrix.ksu_resolved_hash }}
           use_rekernel: ${{ inputs.use_rekernel }}
+          use_nomount: ${{ inputs.use_nomount || false }}
           # BakaSU/FinaSU：内核侧检出到官方最新上传 Manager 构建的同一提交（空=跟随 ksu_branch_or_hash）
           ksu_commit: ${{ needs.get-manager.outputs.ksuCommit }}
           # FinaSU：管理器签名证书（内核第二信任槽对齐用，空=构建时回退 Release APK 提取）
@@ -948,6 +954,7 @@ jobs:
     with:
       ksu_variant: ${{ inputs.ksu_variant }}
       build_channel: ${{ inputs.build_channel }}
+      use_nomount: ${{ inputs.use_nomount || false }}
 
   trigger-release:
     needs: [set-op-model, build, get-manager]
@@ -1180,6 +1187,7 @@ jobs:
           | 挂载方式 | Magic Mount |
           | LTO | thin |
           | Re-Kernel 驱动 | ${{ inputs.use_rekernel && '开启' || '未开启' }} |
+          | NoMount 挂载元模块 | ${{ inputs.use_nomount && '开启' || '未开启' }} |
           | Droidspaces & NTSync | ${{ inputs.enable_droidspaces_ntsync && '开启' || '未开启' }} |
           | 优化级别 | $OPTIMIZE_LEVEL |
           | MLGO | $( [ "$MLGO" = "true" ] && echo "开启" || echo "未开启" ) |
@@ -1206,6 +1214,7 @@ jobs:
           | \`*-AnyKernel3.zip\` | AnyKernel3 内核刷入包 |
           | \`*.apk\` | Root 管理器 |
           | \`susfs-*.zip\` | SUSFS 配套模块 |
+          | \`nomount-*.zip\` | NoMount 配套元模块 |
 
           > [!IMPORTANT]
           > 刷入前请备份原厂 Boot 镜像。
