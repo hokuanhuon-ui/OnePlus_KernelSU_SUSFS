@@ -23,7 +23,7 @@ This repository builds **OnePlus (Oppo/Realme) device kernels** with GitHub Acti
 - The build workflows are adapted from [WildKernels/OnePlus_KernelSU_SUSFS](https://github.com/WildKernels/OnePlus_KernelSU_SUSFS)
 - Supported devices: **Android 15 / Android 16 (ColorOS)** OnePlus devices, covering GKI `5.10 / 5.15 / 6.1 / 6.6 / 6.12`
 - Flashing rule: ***It can be flashed as long as the kernel version matches.***
-- All the Kernels are built on <a href="https://github.com/OnePlusOSS/">OnePlus Official Source</a> and are expected to work only on Stock roms!!!.
+- All the Kernels are built on <a href="https://github.com/hokuanhuon-ui/kernel_manifest">OnePlus Official Source</a> and are expected to work only on Stock roms!!!.
 
 ## 📦 Supported Workflows
 
